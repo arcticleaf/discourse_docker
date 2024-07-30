@@ -1,7 +1,4 @@
-ARG from=discourse/base
-ARG tag=build_slim
-
-FROM $from:$tag
+FROM discourse/base:release
 
 ENV RAILS_ENV=production
 
