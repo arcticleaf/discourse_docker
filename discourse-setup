@@ -497,175 +497,31 @@ ask_user_for_config() {
 
   while [[ "$config_ok" == "n" ]]
   do
-    if [ ! -z "$hostname" ]
-    then
-      read -p "Hostname for your Discourse? [$hostname]: " new_value
-      if [ ! -z "$new_value" ]
-      then
-        hostname="$new_value"
-      fi
-      if [[ $hostname =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]
-      then
-        echo
-        echo "Discourse requires a DNS hostname. IP addresses are unsupported and will not work."
-        echo
-        hostname="discourse.example.com"
-      fi
-    fi
+    hostname="community.arcticleaf.io"
 
     check_IP_match $hostname
 
-    if [ ! -z "$developer_emails" ]
-    then
-      local email_valid="n"
-      until [ "$email_valid" == "y" ]
-      do
-        read -p "Email address for admin account(s)? [$developer_emails]: " new_value
-        if [ ! -z "$new_value" ]
-        then
-          if [[ ${#new_value} -ge 7 && $new_value == *@* ]]
-          then
-            developer_emails="$new_value"
-            email_valid="y"
-          else
-            echo
-            echo "[Error] Invalid email address"
-            echo
-          fi
-        else
-          email_valid="y"
-        fi
-      done
-    fi
+    developer_emails="admin@arcticleaf.io"
 
-    if [ ! -z "$smtp_address" ]
-    then
-      read -p "SMTP server address? [$smtp_address]: " new_value
-      if [ ! -z "$new_value" ]
-      then
-        smtp_address="$new_value"
-      fi
-    fi
+    smtp_address="smtp.mailgun.org"
 
-    if [ ! -z "$smtp_port" ]
-    then
-      read -p "SMTP port? [$smtp_port]: " new_value
-      if [ ! -z "$new_value" ]
-      then
-        smtp_port="$new_value"
-      fi
-    fi
+    smtp_port="587"
 
-    ##
-    ## automatically set correct user name based on common mail providers unless it's been set
-    ##
-    if [ "$smtp_user_name" == "user@example.com" ]
-    then
-      if [ "$smtp_address" == "smtp.sparkpostmail.com" ]
-      then
-      	smtp_user_name="SMTP_Injection"
-      fi
-      if [ "$smtp_address" == "smtp.sendgrid.net" ]
-      then
-        smtp_user_name="apikey"
-      fi
-      if [ "$smtp_address" == "smtp.mailgun.org" ]
-      then
-        smtp_user_name="postmaster@$hostname"
-      fi
-    fi
+    smtp_user_name="postmaster@community.arcticleaf.io"
 
-    if [ ! -z "$smtp_user_name" ]
-    then
-      read -p "SMTP user name? [$smtp_user_name]: " new_value
-      if [ ! -z "$new_value" ]
-      then
-        smtp_user_name="$new_value"
-      fi
-    fi
+    smtp_password=""
 
-    read -p "SMTP password? [$smtp_password]: " new_value
-    if [ ! -z "$new_value" ]
-    then
-      smtp_password="$new_value"
-    fi
-
-    if [[ "$notification_email" == "noreply@discourse.example.com"* ]]
-    then
-      notification_email="noreply@$hostname"
-    fi
-
-    read -p "notification email address? [$notification_email]: " new_value
-    if [ ! -z "$new_value" ]
-    then
-      notification_email="$new_value"
-    fi
+    notification_email="postmaster@community.arcticleaf.io"
 
     # set smtp_domain default value here rather than use Rails default of localhost
     smtp_domain=$(echo $notification_email | sed -e "s/.*@//")
 
-    if [ ! -z $letsencrypt_account_email ]
-    then
-      read -p "Optional email address for Let's Encrypt warnings? ($letsencrypt_status) [$letsencrypt_account_email]: " new_value
-      if [ ! -z "$new_value" ]
-      then
-        letsencrypt_account_email="$new_value"
-        if [ "${new_value,,}" = "off" ]
-        then
-          letsencrypt_status="ENTER to skip"
-        else
-          letsencrypt_status="Enter 'OFF' to disable."
-        fi
-      fi
-    fi
+    letsencrypt_account_email="admin@arcticleaf.io"
 
     read_config "DISCOURSE_MAXMIND_ACCOUNT_ID"
     local maxmind_account_id=$read_config_result
-    read -p "Optional MaxMind Account ID ($maxmind_status) [$maxmind_account_id]: " new_value
-    if [ ! -z "$new_value" ]
-    then
-      maxmind_account_id="$new_value"
 
-      read_config "DISCOURSE_MAXMIND_LICENSE_KEY"
-      local maxmind_license_key=$read_config_result
-      read -p "MaxMind License key [$maxmind_license_key]: " new_value
-
-      if [ ! -z "$new_value" ]
-      then
-        maxmind_license_key="$new_value"
-      fi
-    fi
-
-    echo -e "\nDoes this look right?\n"
-    echo "Hostname          : $hostname"
-    echo "Email             : $developer_emails"
-    echo "SMTP address      : $smtp_address"
-    echo "SMTP port         : $smtp_port"
-    echo "SMTP username     : $smtp_user_name"
-    echo "SMTP password     : $smtp_password"
-    echo "Notification email: $notification_email"
-
-    if [ "$letsencrypt_status" == "Enter 'OFF' to disable." ]
-    then
-      echo "Let's Encrypt : $letsencrypt_account_email"
-    fi
-
-    if [ "$maxmind_account_id" != "123456" ]
-    then
-      echo "MaxMind account ID: $maxmind_account_id"
-    else
-      echo "MaxMind account ID: (unset)"
-    fi
-
-    if [ "$maxmind_license_key" != "1234567890123456" ]
-    then
-      echo "MaxMind license key: $maxmind_license_key"
-    else
-      echo "MaxMind license key: (unset)"
-    fi
-
-    echo ""
-    read -p "ENTER to continue, 'n' to try again, Ctrl+C to exit: " config_ok
+    config_ok="y"
   done
 
   sed -i -e "s/^  DISCOURSE_HOSTNAME:.*/  DISCOURSE_HOSTNAME: $hostname/w $changelog" $web_file
