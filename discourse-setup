@@ -509,7 +509,7 @@ ask_user_for_config() {
 
     smtp_user_name="postmaster@community.arcticleaf.io"
 
-    smtp_password=""
+    smtp_password=$1
 
     notification_email="postmaster@community.arcticleaf.io"
 
